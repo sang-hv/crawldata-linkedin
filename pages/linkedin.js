@@ -81,7 +81,9 @@ const workbook = new Excel.Workbook();
                     return {
                         name: elCompanyName.firstElementChild.innerHTML.trim(),
                         description: elCompanyName.childNodes[3].firstElementChild.firstElementChild.innerHTML.trim(),
-                        link: elLinkCompany.getAttribute('href')
+                        link: elLinkCompany.getAttribute('href'),
+                        list_form: [],
+                        list_email: [],
                     }
                 })
                 try {
@@ -117,7 +119,7 @@ const workbook = new Excel.Workbook();
                     console.log('--log info--')
                     console.log(informationOfCompanies)
                 } catch (e) {
-                    console.log('--3--')
+                    addToExcel(detailInformation)
                     console.log(e)
                 }
 
