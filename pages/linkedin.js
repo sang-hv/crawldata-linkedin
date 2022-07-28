@@ -7,7 +7,7 @@ const fs = require('fs')
 const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin());
-let LIMIT_PAGE = process.env.LIMIT_PAGE ?? 20;
+let LIMIT_PAGE = process.env.LIMIT_PAGE ?? 5;
 let COMPANY_LIST_LINKEDIN_URL = process.env.COMPANY_LIST_LINKEDIN_URL ?? "https://www.linkedin.com/sales/search/company?page=3&query=(filters%3AList((type%3AREGION%2Cvalues%3AList((id%3A102454443%2Ctext%3ASingapore%2CselectionType%3AINCLUDED)))%2C(type%3AINDUSTRY%2Cvalues%3AList((id%3A133%2Ctext%3AWholesale%2CselectionType%3AINCLUDED)))))&sessionId=glAH3YQUQQabeUhN20JQNg%3D%3D";
 const pageData = new PageData();
 const nameFileExcel = `data-excel/${process.env.EXCEL_NAME}.xlsx`;
