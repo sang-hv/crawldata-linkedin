@@ -1,11 +1,9 @@
 # Crawl data LinkedIn
 
 ### Yêu cầu hệ thống
-```dotenv
-node version: v14.18.2
 
-cài đặt chromium
-```
+#### &nbsp;&nbsp; 1. Node version: v14.18.2
+#### &nbsp;&nbsp; 2. [Cài đặt chromium](https://download-chromium.appspot.com/)
 
 ### Hướng dẫn cài đặt
 ```dotenv
@@ -16,12 +14,12 @@ npm install
 
 #### Nhập link tìm kiếm
 ```dotenv
-EXPORT COMPANY_LIST_LINKEDIN_URL="link tìm kiếm"
+export COMPANY_LIST_LINKEDIN_URL="link tìm kiếm"
 ```
 
 #### Nhập số trang tìm kiếm trong 1 lần crawl (mặc định 20)
 ```dotenv
-EXPORT LIMIT_PAGE=số_trang
+export LIMIT_PAGE=số_trang
 ```
 
 #### Crawl data
