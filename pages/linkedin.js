@@ -15,7 +15,7 @@ const workbook = new Excel.Workbook();
 
 (function () {
     puppeteer.launch({
-        headless: false,
+        headless: true,
         args: ['--no-sandbox']
     })
         .then(async browser => {

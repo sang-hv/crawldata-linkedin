@@ -3,6 +3,8 @@
 ### Yêu cầu hệ thống
 ```dotenv
 node version: v14.18.2
+
+cài đặt chromium
 ```
 
 ### Hướng dẫn cài đặt
