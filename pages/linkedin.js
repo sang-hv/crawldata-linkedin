@@ -1,21 +1,29 @@
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
-
+require('dotenv').config()
 const Excel = require('exceljs');
 import PageData from '../process/page-data.js'
 const fs = require('fs')
 const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin());
-let LIMIT_PAGE = process.env.LIMIT_PAGE ?? 5;
-let COMPANY_LIST_LINKEDIN_URL = process.env.COMPANY_LIST_LINKEDIN_URL ?? "https://www.linkedin.com/sales/search/company?page=3&query=(filters%3AList((type%3AREGION%2Cvalues%3AList((id%3A102454443%2Ctext%3ASingapore%2CselectionType%3AINCLUDED)))%2C(type%3AINDUSTRY%2Cvalues%3AList((id%3A133%2Ctext%3AWholesale%2CselectionType%3AINCLUDED)))))&sessionId=glAH3YQUQQabeUhN20JQNg%3D%3D";
+let LIMIT_PAGE = process.env.LIMIT_PAGE ?? 2;
+let COMPANY_LIST_LINKEDIN_URL = process.env.COMPANY_LIST_LINKEDIN_URL;
 const pageData = new PageData();
-const nameFileExcel = `data-excel/${process.env.EXCEL_NAME}.xlsx`;
 const workbook = new Excel.Workbook();
+const nameFileExcel = `data-excel/${process.env.EXCEL_NAME}.xlsx`;
+const linkedinErrorLog = 'logs/linkedin-error.log';
+const linkedinDataLog = 'logs/linkedin-data.log';
 
 (function () {
+    if (COMPANY_LIST_LINKEDIN_URL === '') {
+        console.log(process.env.LIMIT_PAGE)
+        console.log('Link search is missing!')
+        return false;
+    }
+
     puppeteer.launch({
-        headless: true,
+        headless: false,
         args: ['--no-sandbox']
     })
         .then(async browser => {
@@ -33,39 +41,57 @@ const workbook = new Excel.Workbook();
             await page.waitForNavigation
             await autoScrollData(page)
             const linkCompanies = await getInformationOfCompanies(page)
-
+            writeLogs(linkedinDataLog,linkCompanies.join('\n'))
             COMPANY_LIST_LINKEDIN_URL = await getNextPage(page)
             pageNumber++;
-            fs.writeFile('./logs/history-log.txt',
-                `${pageNumber} - ${COMPANY_LIST_LINKEDIN_URL}`,
-                function (err) {
-                if (err) return console.log(err);
-            });
-
+            updateAttributeEnv('COMPANY_LIST_LINKEDIN_URL', COMPANY_LIST_LINKEDIN_URL)
             await getDetailCompaniesAndSaveData(page, linkCompanies)
         } while (COMPANY_LIST_LINKEDIN_URL !== '' && pageNumber <= LIMIT_PAGE)
     }
 
+    const writeLogs = (path, data) => {
+        if (!fs.existsSync(path)) {
+            fs.writeFile(path, `\n${data}`,
+            function (err) {
+                if (err) return console.log(err);
+            });
+        } else {
+            fs.appendFileSync(path, `\n${data}`);
+        }
+    }
+
     const getNextPage = async (page) => {
-        let elNextButtonVal = '.artdeco-pagination__button.artdeco-pagination__button--next.artdeco-button.artdeco-button--muted.artdeco-button--icon-right.artdeco-button--1.artdeco-button--tertiary.ember-view'
-        const isEnabledNextPage = await page.evaluate((elNextButtonVal) => {
-            return !document.querySelector(elNextButtonVal).disabled
-        }, elNextButtonVal)
-        if (isEnabledNextPage) {
-            await page.click(elNextButtonVal)
-            return await page.url()
-        } else return ''
+        try {
+            let elNextButtonVal = '.artdeco-pagination__button.artdeco-pagination__button--next.artdeco-button.artdeco-button--muted.artdeco-button--icon-right.artdeco-button--1.artdeco-button--tertiary.ember-view'
+            await page.waitForSelector(elNextButtonVal)
+            const isEnabledNextPage = await page.evaluate((elNextButtonVal) => {
+                return !document.querySelector(elNextButtonVal).disabled
+            }, elNextButtonVal)
+            if (isEnabledNextPage) {
+                await page.click(elNextButtonVal)
+                return await page.url()
+            } else return ''
+        } catch (e) {
+            writeLogs(linkedinErrorLog, 'Error get next page')
+        }
     }
 
     const getInformationOfCompanies = async (page) => {
-        return await page.evaluate(() => {
-            let result = []
-            let blockHTMLCompanies = document.querySelectorAll('.artdeco-entity-lockup__content.ember-view')
-            for (const company of blockHTMLCompanies) {
-                result.push('https://www.linkedin.com'+ company.childNodes[1].firstElementChild.firstElementChild.getAttribute('href'))
-            }
-            return result
-        })
+        try {
+            page.waitForSelector('.artdeco-entity-lockup__content.ember-view')
+            return await page.evaluate(() => {
+                let result = []
+                let blockHTMLCompanies = document.querySelectorAll('.artdeco-entity-lockup__content.ember-view')
+                for (const company of blockHTMLCompanies) {
+                    result.push('https://www.linkedin.com'+ company.childNodes[1].firstElementChild.firstElementChild.getAttribute('href'))
+                }
+                return result
+            })
+        } catch (e) {
+            writeLogs('logs/linkedin.log', 'Account is blocked or low network!')
+            process.exit(0)
+        }
+
     }
 
     const getDetailCompaniesAndSaveData = async (page, linkCompanies) => {
@@ -88,6 +114,7 @@ const workbook = new Excel.Workbook();
                 })
                 try {
                     await page.goto(detailInformation.link)
+                    await page.waitForSelector('a')
                     let contactInfo = await page.evaluate(async () => {
                         let baseUrl = window.location.origin
                         let title = document.title
@@ -187,9 +214,26 @@ const workbook = new Excel.Workbook();
         await page.goto("https://www.linkedin.com/login")
         await page.waitForSelector('#username');
         await page.waitForSelector('#password');
-        await page.type('#username', 'huynq@deha-soft.com');
-        await page.type('#password', '0180301999');
+        await page.type('#username', process.env.USERNAME);
+        await page.type('#password', process.env.PASSWORD);
         await clickByText(page, 'Sign in')
         await page.waitForNavigation()
+    }
+
+    function updateAttributeEnv(attrName, newVal, envPath = '.env'){
+        let dataArray = fs.readFileSync(envPath, 'utf8').split('\n')
+
+        let replacedArray = dataArray.map((line) => {
+            if (line.split('=')[0] == attrName){
+                return attrName + "=" + String(newVal);
+            } else {
+                return line;
+            }
+        })
+
+        fs.writeFileSync(envPath, "");
+        for (let i = 0; i < replacedArray.length; i++) {
+            fs.appendFileSync(envPath, replacedArray[i] + "\n");
+        }
     }
 }())

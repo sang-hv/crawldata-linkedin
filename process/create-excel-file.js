@@ -27,7 +27,7 @@ function exTest(){
 
     if (!fs.existsSync(fileName)) {
         workbook.xlsx.writeFile(fileName).then(r => {});
-        console.log("File created");
+        console.log(`File ${fileName}.xlsx created`);
     } else {
         console.log('File existed')
     }
