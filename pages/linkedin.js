@@ -1,34 +1,36 @@
 import { createRequire } from 'module'
+
 const require = createRequire(import.meta.url)
 require('dotenv').config()
-const Excel = require('exceljs');
+const Excel = require('exceljs')
 import PageData from '../process/page-data.js'
+
 const fs = require('fs')
 const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-puppeteer.use(StealthPlugin());
-let LIMIT_PAGE = process.env.LIMIT_PAGE ?? 2;
-let COMPANY_LIST_LINKEDIN_URL = process.env.COMPANY_LIST_LINKEDIN_URL;
-const pageData = new PageData();
-const workbook = new Excel.Workbook();
-const nameFileExcel = `data-excel/${process.env.EXCEL_NAME}.xlsx`;
-const linkedinErrorLog = 'logs/linkedin-error.log';
+puppeteer.use(StealthPlugin())
+let LIMIT_PAGE = process.env.LIMIT_PAGE ?? 2
+let COMPANY_LIST_LINKEDIN_URL = process.env.COMPANY_LIST_LINKEDIN_URL
+const pageData = new PageData()
+const workbook = new Excel.Workbook()
+const nameFileExcel = `data-excel/${process.env.EXCEL_NAME}.xlsx`
+const linkedinErrorLog = 'logs/linkedin-error.log'
 const linkedinDataLog = 'logs/linkedin-data.log';
 
 (function () {
     if (COMPANY_LIST_LINKEDIN_URL === '') {
         console.log(process.env.LIMIT_PAGE)
         console.log('Link search is missing!')
-        return false;
+        return false
     }
 
     puppeteer.launch({
-        headless: false,
+        headless: process.env.SHOW_BROSWER_INTERFACE,
         args: ['--no-sandbox']
     })
         .then(async browser => {
             const page = await browser.newPage()
-            await page.exposeFunction('getContactInformation', (baseUrl, title, dataLinks) => pageData.getContactInformation(baseUrl, title, dataLinks));
+            await page.exposeFunction('getContactInformation', (baseUrl, title, dataLinks) => pageData.getContactInformation(baseUrl, title, dataLinks))
             await loginLinkedIn(page)
             await getLinkCompaniesFromLinkedIn(page)
             await browser.close()
@@ -41,9 +43,9 @@ const linkedinDataLog = 'logs/linkedin-data.log';
             await page.waitForNavigation
             await autoScrollData(page)
             const linkCompanies = await getInformationOfCompanies(page)
-            writeLogs(linkedinDataLog,linkCompanies.join('\n'))
+            writeLogs(linkedinDataLog, linkCompanies.join('\n'))
             COMPANY_LIST_LINKEDIN_URL = await getNextPage(page)
-            pageNumber++;
+            pageNumber++
             updateAttributeEnv('COMPANY_LIST_LINKEDIN_URL', COMPANY_LIST_LINKEDIN_URL)
             await getDetailCompaniesAndSaveData(page, linkCompanies)
         } while (COMPANY_LIST_LINKEDIN_URL !== '' && pageNumber <= LIMIT_PAGE)
@@ -52,11 +54,11 @@ const linkedinDataLog = 'logs/linkedin-data.log';
     const writeLogs = (path, data) => {
         if (!fs.existsSync(path)) {
             fs.writeFile(path, `\n${data}`,
-            function (err) {
-                if (err) return console.log(err);
-            });
+                function (err) {
+                    if (err) return console.log(err)
+                })
         } else {
-            fs.appendFileSync(path, `\n${data}`);
+            fs.appendFileSync(path, `\n${data}`)
         }
     }
 
@@ -83,7 +85,7 @@ const linkedinDataLog = 'logs/linkedin-data.log';
                 let result = []
                 let blockHTMLCompanies = document.querySelectorAll('.artdeco-entity-lockup__content.ember-view')
                 for (const company of blockHTMLCompanies) {
-                    result.push('https://www.linkedin.com'+ company.childNodes[1].firstElementChild.firstElementChild.getAttribute('href'))
+                    result.push('https://www.linkedin.com' + company.childNodes[1].firstElementChild.firstElementChild.getAttribute('href'))
                 }
                 return result
             })
@@ -118,12 +120,12 @@ const linkedinDataLog = 'logs/linkedin-data.log';
                     let contactInfo = await page.evaluate(async () => {
                         let baseUrl = window.location.origin
                         let title = document.title
-                        let dataLinks = [];
+                        let dataLinks = []
                         document.querySelectorAll('a').forEach(element =>
                             dataLinks.push(element.getAttribute('href'))
-                        );
-                        return await window.getContactInformation(baseUrl, title, dataLinks);
-                    });
+                        )
+                        return await window.getContactInformation(baseUrl, title, dataLinks)
+                    })
                     detailInformation.list_form = contactInfo.list_form
                     detailInformation.list_email = contactInfo.list_email
 
@@ -132,10 +134,10 @@ const linkedinDataLog = 'logs/linkedin-data.log';
                         await page.goto(detailInformation.list_form[0])
                         detailInformation.list_email = await page.evaluate(() => {
                             const extractEmails = (text) => {
-                                return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+                                return text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi)
                             }
-                            const htmlString = document.getElementsByTagName('html')[0].innerHTML;
-                            return [...new Set(extractEmails(htmlString))];
+                            const htmlString = document.getElementsByTagName('html')[0].innerHTML
+                            return [...new Set(extractEmails(htmlString))]
                         })
 
                     } catch (e) {
@@ -160,21 +162,21 @@ const linkedinDataLog = 'logs/linkedin-data.log';
 
     const addToExcel = (data) => {
         workbook.xlsx.readFile(nameFileExcel)
-            .then(function()  {
-                const worksheet = workbook.getWorksheet("My Sheet");
-                let lastRow = worksheet.lastRow.number;
-                const getRowInsert = worksheet.getRow(++lastRow);
-                getRowInsert.getCell('D').value = data.name;
-                getRowInsert.getCell('H').value = data.description;
-                getRowInsert.getCell('I').value = data.list_form.join(' \n ');
-                getRowInsert.getCell('K').value = data.list_email.join(' \n ');
-                getRowInsert.commit();
-                return workbook.xlsx.writeFile(nameFileExcel);
-            });
+            .then(function () {
+                const worksheet = workbook.getWorksheet('My Sheet')
+                let lastRow = worksheet.lastRow.number
+                const getRowInsert = worksheet.getRow(++lastRow)
+                getRowInsert.getCell('D').value = data.name
+                getRowInsert.getCell('H').value = data.description
+                getRowInsert.getCell('I').value = data.list_form.join(' \n ')
+                getRowInsert.getCell('K').value = data.list_email.join(' \n ')
+                getRowInsert.commit()
+                return workbook.xlsx.writeFile(nameFileExcel)
+            })
     }
 
     const autoScrollData = async (page) => {
-        await page.waitForSelector('#search-results-container');
+        await page.waitForSelector('#search-results-container')
         await page.evaluate(async () => {
             await new Promise((resolve, reject) => {
                 const scroll = document.getElementById('search-results-container')
@@ -190,50 +192,52 @@ const linkedinDataLog = 'logs/linkedin-data.log';
                         resolve()
                     }
                 }, 200)
-            });
-        });
+            })
+        })
     }
 
     const escapeXpathString = str => {
-        const splitedQuotes = str.replace(/'/g, `', "'", '`);
-        return `concat('${splitedQuotes}', '')`;
-    };
-
-    const clickByText = async (page, text) => {
-        const escapedText = escapeXpathString(text);
-        const linkHandlers = await page.$x(`//button[contains(text(), ${escapedText})]`);
-
-        if (linkHandlers.length > 0) {
-            await linkHandlers[0].click();
-        } else {
-            throw new Error(`Link not found: ${text}`);
-        }
-    };
-
-    const loginLinkedIn = async (page) => {
-        await page.goto("https://www.linkedin.com/login")
-        await page.waitForSelector('#username');
-        await page.waitForSelector('#password');
-        await page.type('#username', process.env.USERNAME);
-        await page.type('#password', process.env.PASSWORD);
-        await clickByText(page, 'Sign in')
-        await page.waitForNavigation()
+        const splitedQuotes = str.replace(/'/g, `', "'", '`)
+        return `concat('${splitedQuotes}', '')`
     }
 
-    function updateAttributeEnv(attrName, newVal, envPath = '.env'){
+    const clickByText = async (page, text) => {
+        const escapedText = escapeXpathString(text)
+        const linkHandlers = await page.$x(`//button[contains(text(), ${escapedText})]`)
+
+        if (linkHandlers.length > 0) {
+            await linkHandlers[0].click()
+        } else {
+            throw new Error(`Link not found: ${text}`)
+        }
+    }
+
+    const loginLinkedIn = async (page) => {
+        console.log('--Login to Linkedin--')
+        await page.goto('https://www.linkedin.com/login')
+        await page.waitForSelector('#username')
+        await page.waitForSelector('#password')
+        await page.type('#username', process.env.USERNAME)
+        await page.type('#password', process.env.PASSWORD)
+        await clickByText(page, 'Sign in')
+        await page.waitForNavigation()
+        console.log('--Login successful--')
+    }
+
+    function updateAttributeEnv (attrName, newVal, envPath = '.env') {
         let dataArray = fs.readFileSync(envPath, 'utf8').split('\n')
 
         let replacedArray = dataArray.map((line) => {
-            if (line.split('=')[0] == attrName){
-                return attrName + "=" + String(newVal);
+            if (line.split('=')[0] == attrName) {
+                return attrName + '=' + String(newVal)
             } else {
-                return line;
+                return line
             }
         })
 
-        fs.writeFileSync(envPath, "");
+        fs.writeFileSync(envPath, '')
         for (let i = 0; i < replacedArray.length; i++) {
-            fs.appendFileSync(envPath, replacedArray[i] + "\n");
+            fs.appendFileSync(envPath, replacedArray[i] + '\n')
         }
     }
 }())
