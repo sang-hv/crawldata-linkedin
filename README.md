@@ -6,24 +6,34 @@
 
 ### Chạy crawl
 
-#### Start container
+#### 1. Start container
 ```dotenv
 cd docker
 dokcer-compose up -d
 cd ..
 ```
 
-#### Cài đặt libraries cho project (chạy lần đầu khi clone project về)
+#### 2. Cài đặt libraries cho project (chạy lần đầu khi clone project về)
 ```dotenv
 bash init-project.sh
 ```
 
-#### Crawl data
+#### 3. Cấu hình link tìm kiếm 
+##### &nbsp; - Tạo file .env 
+```dotenv
+cp .env.example .env
+```
+##### &nbsp; - Chỉnh sửa giá trị COMPANY_LIST_LINKEDIN_URL trong file .env
+```dotenv
+COMPANY_LIST_LINKEDIN_URL=patse_link_tìm_kiếm
+```
+
+#### 4. Crawl data
 ```dotenv
 bash crawl-data.sh
 ```
 
 #### Lưu ý:
-- Sau khi chạy **run.sh** không huỷ tiến trình 
+- Sau khi chạy **bash crawl-data.sh** không huỷ tiến trình 
 - Dữ liệu sẽ được lưu ở folder **data-excel** với tên **Linkedin_data_Năm-Tháng-Ngày_Giờ-Phút-Giây**
-- Link trang tìm kiếm cuối cùng được lưu ở folder **logs/history-log.txt**
+- Lần crawl data tiếp theo chỉ cần chạy **bash crawl-data.sh**
