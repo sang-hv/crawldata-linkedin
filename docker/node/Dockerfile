@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
       fonts-symbola \
       --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /etc/chromium.d/ \
+    && mkdir -p /etc/chromium.d/
 #
 ## Add chromium user
 #RUN groupadd -r chromium && useradd -r -g chromium -G audio,video chromium \

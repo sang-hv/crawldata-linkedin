@@ -6,5 +6,6 @@ services:
             context: ./node
             dockerfile: Dockerfile
         working_dir: /var/www
+        tty: true
         volumes:
-            - ../data-excel/:/var/www/data-excel
+            - ../:/var/www

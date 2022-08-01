@@ -2,29 +2,25 @@
 
 ### Yêu cầu hệ thống
 
-#### &nbsp;&nbsp; 1. Node version: v14.18.2
-#### &nbsp;&nbsp; 2. [Cài đặt chromium](https://download-chromium.appspot.com/)
-
-### Hướng dẫn cài đặt
-```dotenv
-npm install
-```
+### Docker
 
 ### Chạy crawl
 
-#### Nhập link tìm kiếm
+#### Start container
 ```dotenv
-export COMPANY_LIST_LINKEDIN_URL="link tìm kiếm"
+cd docker
+dokcer-compose up -d
+cd ..
 ```
 
-#### Nhập số trang tìm kiếm trong 1 lần crawl (mặc định 20)
+#### Cài đặt libraries cho project (chạy lần đầu khi clone project về)
 ```dotenv
-export LIMIT_PAGE=số_trang
+bash init-project.sh
 ```
 
 #### Crawl data
 ```dotenv
-bash run.sh
+bash crawl-data.sh
 ```
 
 #### Lưu ý:
