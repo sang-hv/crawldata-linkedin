@@ -1,4 +1,5 @@
 import { createRequire } from 'module'
+
 const require = createRequire(import.meta.url)
 require('dotenv').config()
 const Excel = require('exceljs')
@@ -25,7 +26,8 @@ const linkedinDataLog = 'logs/linkedin-data.log';
 
     puppeteer.launch({
         headless: process.env.SHOW_BROSWER_INTERFACE,
-        args: ['--no-sandbox']
+        args: ['--no-sandbox'],
+        executablePath: '/usr/bin/chromium'
     })
         .then(async browser => {
             const page = await browser.newPage()
@@ -167,8 +169,8 @@ const linkedinDataLog = 'logs/linkedin-data.log';
                 const getRowInsert = worksheet.getRow(++lastRow)
                 getRowInsert.getCell('D').value = data.name
                 getRowInsert.getCell('H').value = data.description
-                getRowInsert.getCell('I').value = data.list_form.join(' \n ')
-                getRowInsert.getCell('K').value = data.list_email.join(' \n ')
+                getRowInsert.getCell('I').value = (data.hasOwnProperty('list_form') && Array.isArray(data.list_form)) ? data.list_form.join(' \n ') : ''
+                getRowInsert.getCell('K').value = (data.hasOwnProperty('list_email') && Array.isArray(data.list_email)) ? data.list_email.join(' \n ') : ''
                 getRowInsert.commit()
                 return workbook.xlsx.writeFile(nameFileExcel)
             })

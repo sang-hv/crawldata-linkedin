@@ -8,9 +8,7 @@
 
 #### 1. Start container
 ```dotenv
-cd docker
-dokcer-compose up -d
-cd ..
+bash start-docker-container.sh
 ```
 
 #### 2. Cài đặt libraries cho project (chạy lần đầu khi clone project về)
