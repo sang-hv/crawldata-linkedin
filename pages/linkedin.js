@@ -169,7 +169,7 @@ const linkedinDataLog = 'logs/linkedin-data.log';
                 const getRowInsert = worksheet.getRow(++lastRow)
                 getRowInsert.getCell('D').value = data.name
                 getRowInsert.getCell('H').value = data.description
-                getRowInsert.getCell('I').value = (data.hasOwnProperty('list_form') && Array.isArray(data.list_form)) ? data.list_form.join(' \n ') : ''
+                getRowInsert.getCell('I').value = (data.hasOwnProperty('list_form') && Array.isArray(data.list_form)) ? { text: data.list_form[0], hyperlink: data.list_form[0] } : ''
                 getRowInsert.getCell('K').value = (data.hasOwnProperty('list_email') && Array.isArray(data.list_email)) ? data.list_email.join(' \n ') : ''
                 getRowInsert.commit()
                 return workbook.xlsx.writeFile(nameFileExcel)

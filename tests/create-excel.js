@@ -26,7 +26,7 @@ async function exTest(){
             const worksheet = workbook.getWorksheet("My Sheet");
             let lastRow = worksheet.lastRow.number;
             const getRowInsert = worksheet.getRow(++lastRow);
-            getRowInsert.getCell('A').value = 'New Value \n 4324';
+            getRowInsert.getCell('A').value = { text: 'Sheet2', hyperlink: 'https://google.com' };
             getRowInsert.commit();
             return workbook.xlsx.writeFile(nameFileExcel);
         });
