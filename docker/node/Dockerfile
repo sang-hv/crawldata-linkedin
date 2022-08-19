@@ -1,6 +1,7 @@
 FROM node:16
 
 RUN apt-get update && apt-get install -y \
+      tzdata \
       chromium \
       chromium-l10n \
       fonts-liberation \
@@ -17,8 +18,6 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /etc/chromium.d/
 #
-## Add chromium user
-#RUN groupadd -r chromium && useradd -r -g chromium -G audio,video chromium \
-#    && mkdir -p /home/chromium/Downloads && chown -R chromium:chromium /home/chromium
+ENV TZ="Asia/Ho_Chi_Minh"
 
 

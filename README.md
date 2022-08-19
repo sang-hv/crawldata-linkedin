@@ -33,5 +33,5 @@ bash crawl-data.sh
 
 #### Lưu ý:
 - Sau khi chạy **bash crawl-data.sh** không huỷ tiến trình 
-- Dữ liệu sẽ được lưu ở folder **data-excel** với tên **Linkedin_data_Năm-Tháng-Ngày_Giờ-Phút-Giây**
+- Dữ liệu sẽ được lưu ở folder **data-excel** với tên **Linkedin_data_Năm-Tháng-Ngày_Giờ-Phút**
 - Lần crawl data tiếp theo chỉ cần chạy **bash crawl-data.sh**
